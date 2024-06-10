@@ -57,3 +57,4 @@ type Request struct {
 	//For Filter
 	Categories []string `json:"Categories"`
 }
+

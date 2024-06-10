@@ -17,6 +17,7 @@ func CreateTables() {
 	// Create the account table if it doesn't exist
 	AccountsTableQuery := `CREATE TABLE IF NOT EXISTS accounts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		Type TEXT,
 		Email TEXT,
 		Username TEXT UNIQUE,
 		Password TEXT,

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"fmt"
+	"log"
 )
 
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +56,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 				Template(w, tmpl, errorMessage)
 			} else {
 				password := encrytion(account.Password)
-				ID, errorMessage, err := AddAccount(account.Email, account.Username, password)
+				ID, errorMessage, err := AddAccount(account.Email, account.Username, password, "N")
 				if errorMessage != "" {
 					Template(w, tmpl, errorMessage)
 				}
@@ -77,33 +78,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func GSignUp (w http.ResponseWriter, r *http.Request ,Uname string, UEmail string, Uprofile string) {
-	
-exists, err := AccountExists(UEmail)
-if err != nil {
-	http.Error(w, err.Error(), http.StatusInternalServerError)
-	return
-}
-
-if exists {
-http.Redirect(w, r, "/", http.StatusFound)
-} else {
-
-ID, _, err := AddAccount(UEmail, Uname, "")
-	
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-sessionID, expt := Cookies(w)
-SessionID(ID, sessionID, expt)
-guest = false
-http.Redirect(w, r, "/HomePage", http.StatusFound)
-}
-}
-
-
-func GLogin (w http.ResponseWriter, r *http.Request ,Uname string, UEmail string, Uprofile string) {
+func GLogin (w http.ResponseWriter, r *http.Request ,Uname string, UEmail string) {
 	// check if account Exists
 	var ID int64
 	exists, err := AccountExists(UEmail)
@@ -112,22 +87,44 @@ func GLogin (w http.ResponseWriter, r *http.Request ,Uname string, UEmail string
 	}
 	 if !exists {
 		//http.Redirect(w, r, "/", http.StatusFound)
-		ID, _, err = AddAccount(UEmail, Uname, "")
+		ID, _, err = AddAccount(UEmail, Uname, "", "G")
 	
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	} else {
+		sessionID, expt := Cookies(w)
+				SessionID(ID, sessionID, expt)
+				guest = false
+				http.Redirect(w, r, "/HomePage", http.StatusFound)
+	} else if AccountG(UEmail) {
+
 		ID, err = GetAccountID(UEmail, Uname)
 		if err !=nil {
 			fmt.Print("help")
 		}
-	}
-				sessionID, expt := Cookies(w)
+		sessionID, expt := Cookies(w)
 				SessionID(ID, sessionID, expt)
 				guest = false
 				http.Redirect(w, r, "/HomePage", http.StatusFound)
+	} else {
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
+				
+}
+
+func AccountG(Email string) bool {
+	var kind string
+	err = Accountsdb.QueryRow("SELECT Type FROM accounts WHERE Email = ?", Email).
+		Scan(&kind)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if kind == "G" {
+		return true
+	}
+	return false
+
 }
 
 
@@ -136,11 +133,11 @@ func GLogin (w http.ResponseWriter, r *http.Request ,Uname string, UEmail string
 	
 
 
-func AddAccount(email, username, password string) (int64, string, error){
+func AddAccount(email, username, password string, kind string) (int64, string, error){
 	errorMessage := ""
-	insertQuery := "INSERT INTO accounts (Email, Username, Password) VALUES (?, ?, ?)"
+	insertQuery := "INSERT INTO accounts (Email, Username, Password, Type) VALUES (?, ?, ?, ?)"
 	
-	result, err := Accountsdb.Exec(insertQuery, email, username, password)
+	result, err := Accountsdb.Exec(insertQuery, email, username, password, kind)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed: accounts.Username") {
 			errorMessage = "Username is already taken. Please choose a different username."

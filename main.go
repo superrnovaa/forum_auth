@@ -44,8 +44,6 @@ type UserResponse struct {
     AvatarURL   string `json:"avatar_url"`
 }
 
-var wayy bool
-
 func loadConfig(filename string) (*Config, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -72,7 +70,6 @@ func googleLoginHandler(config *Config) http.HandlerFunc {
 
 func googleCallbackHandler(config *Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("second")
 		code := r.URL.Query().Get("code")
 		tokenURL := fmt.Sprintf("%s?client_id=%s&client_secret=%s&code=%s&grant_type=authorization_code&redirect_uri=%s",
 			googleTokenURL, config.GoogleClientID, config.GoogleClientSecret, code, config.GoogleRedirectURI)
@@ -119,18 +116,15 @@ func googleCallbackHandler(config *Config) http.HandlerFunc {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
-
-
 	Uname:= userProfile.Name
 	UEmail := userProfile.Email
-	Uprofile := userProfile.Picture
+	//Uprofile := userProfile.Picture
 
-	forum.GLogin(w,r,Uname, UEmail, Uprofile)
+	forum.GLogin(w,r,Uname, UEmail)
 
 
  }
 }
-
 
 func githubLoginHandler(config *Config) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -170,8 +164,6 @@ func githubCallbackHandler(config *Config) http.HandlerFunc {
 
         // Extract the relevant values
         accessToken := values.Get("access_token")
-        //tokenType := values.Get("token_type")
-        //scope := values.Get("scope")
 
         userInfoReq, err := http.NewRequest("GET", githubUserInfoURL, nil)
         userInfoReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
@@ -187,21 +179,14 @@ func githubCallbackHandler(config *Config) http.HandlerFunc {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
-
+//fmt.Fprintf(w, "Welcome, %s!", userInfoBody)
         var user UserResponse
         if err := json.Unmarshal(userInfoBody, &user); err != nil {
             http.Error(w, "Failed to parse user info response", http.StatusInternalServerError)
             return
         }
 
-        fmt.Println("Name:", user.Name)
-        fmt.Println("Email:", user.Email)
-        fmt.Println("Profile Picture URL:", user.AvatarURL)
-
-
-			forum.GLogin(w,r,user.Name, user.Email, user.AvatarURL)
-	
-        // forum.GoogleSignUp(w,r,user.Name, user.Email, user.AvatarURL)
+			forum.GLogin(w,r,user.Name, user.Email)
         // http.Redirect(w, r, "/HomePage", http.StatusFound)
     }
 }
