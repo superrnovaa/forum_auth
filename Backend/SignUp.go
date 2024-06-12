@@ -108,7 +108,10 @@ func GLogin (w http.ResponseWriter, r *http.Request ,Uname string, UEmail string
 				guest = false
 				http.Redirect(w, r, "/HomePage", http.StatusFound)
 	} else {
+		errorMessage = "Account Already exists"
 		http.Redirect(w, r, "/", http.StatusFound)
+		
+	
 	}
 				
 }
@@ -129,9 +132,6 @@ func AccountG(Email string) bool {
 
 
 	
-	
-	
-
 
 func AddAccount(email, username, password string, kind string) (int64, string, error){
 	errorMessage := ""

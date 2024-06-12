@@ -23,6 +23,7 @@ func Template(w http.ResponseWriter, temp *template.Template, message string) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	errorMessage = ""
 }
 
 func isValidEmail(email string) bool {

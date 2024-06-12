@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"time"
 )
+
 var account Account
 func Login(w http.ResponseWriter, r *http.Request) {
 	
@@ -31,7 +32,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		// Display the account creation form
 		err := tmpl.Execute(w, map[string]interface{}{
-			"Error": "",
+			"Error": errorMessage,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,6 +59,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				errorMessage := "This Account Does Not Exist. Please Try Again"
 				Template(w, tmpl, errorMessage)
 			} else {
+				if AccountG(account.Email) {
+					errorMessage := "Log in using Google or Github"
+				Template(w, tmpl, errorMessage)
+				} else {
 				//HandlerLoginCookies(w, r, account)
 				var password string
 				ID, err := GetAccountID(account.Email, account.Username)
@@ -80,6 +85,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 						http.Redirect(w, r, "/HomePage", http.StatusFound)
 					}
 				}
+			}
 			}
 		case "signup":
 			http.Redirect(w, r, "/SignUp", http.StatusFound)

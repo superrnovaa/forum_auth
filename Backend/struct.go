@@ -20,6 +20,7 @@ var LikedPostsdb *sql.DB
 var Commentsdb *sql.DB
 var err error
 var guest bool
+var errorMessage string
 
 var Posts []Post
 type Post struct {
